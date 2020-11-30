@@ -6,9 +6,11 @@ public class CalculatorController {
     }
 
     public String[] update(String action) {
-        String[] finalEquation = new String[2];
+        if (action.equals("Graph")) {
+            return calcModel.evaluateGraph();
+        }
+        return calcModel.performAction(action);
 
-        return finalEquation;
     }
 
 }
