@@ -5,22 +5,19 @@ import java.util.ArrayList;
 
 
 
-public class CalculatorView  {
+public class CalculatorView  implements ActionListener{
+
 	protected JFrame frame;
 	protected JPanel display;
 	protected JPanel button;
 	protected JPanel graph;
 	protected JPanel graphDisplay;
 	protected JTabbedPane tabs;
-
 	protected JTextArea inputEquation;
 	protected JTextArea equationDisplay;
 	protected JTextArea graphEquation;
-	
 	protected CalculatorController calcControl;
-	
 	protected Graphics2D g;
-	
 	protected Font displayFont;
 
 	protected void createTabs() {
@@ -36,39 +33,59 @@ public class CalculatorView  {
 		frame.add(tabs);
 	}
 
-	
-	public CalculatorView()
+	protected void createFrame()
 	{
-		displayFont = new Font("Dialogue", Font.PLAIN, 18);
-
-		frame = new JFrame("Graphing Calculator");
+		frame = new JFrame("Graphicalc");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(new GridLayout(1, 2));
 		frame.setSize(1250, 720);
+	}
 
+	protected void createGraphPanel()
+	{
 		graph = new JPanel();
 		graph.setLayout(null);
 		graph.setVisible(true);
 		frame.add(graph, BorderLayout.WEST);
 		addToGraphPanel();
+
+	}
+	protected void createDisplayPanel()
+	{
 		display = new JPanel();
 		display.setLayout(null);
 		frame.add(display, BorderLayout.WEST);
+		addToDisplayPanel();
+	}
+
+	protected void addToDisplayPanel()
+	{
 		inputEquation = new JTextArea("Enter equation here: ", 3, 5);
 		inputEquation.setLineWrap(true);
 		inputEquation.setEditable(false);
 		inputEquation.setFont(displayFont);
 		inputEquation.setBounds(0, 0, 600, 50);
 		display.add(inputEquation);
-
 		equationDisplay = new JTextArea("Previous Equations: \n", 3, 5);
 		equationDisplay.setLineWrap(true);
 		equationDisplay.setEditable(false);
 		equationDisplay.setFont(displayFont);
 		equationDisplay.setBounds(0, 60, 600, 600);
 		display.add(equationDisplay);
+
+	}
+
+
+	public CalculatorView()
+	{
+		displayFont = new Font("Dialogue", Font.PLAIN, 18);
+
+		createFrame();
+		createGraphPanel();
+		createDisplayPanel();
 		createButtonPanel();
 		createTabs();
+
 
 		calcControl = new CalculatorController();
 		frame.setLocationRelativeTo(null);
@@ -169,6 +186,7 @@ public class CalculatorView  {
 			JButton temp = buttonList.get(j);
 			temp.setFont(f);
 			temp.setActionCommand(temp.getText());
+			temp.addActionListener(this);
 			button.add(temp);
 		}
 	}
@@ -186,7 +204,62 @@ public class CalculatorView  {
 		graphDisplay.setBounds(0, 50, 650, 650);
 		graph.add(graphDisplay);
 	}
-	
+
+	public void actionPerformed(ActionEvent arg0) {
+		String result = arg0.getActionCommand();
+		String[] fullEquation;
+		String[] newText;
+
+		if (result.equals("Enter")) {
+
+			fullEquation = calcControl.update("Enter");
+			String eq = fullEquation[0];
+			String sol = fullEquation[1];
+
+			equationDisplay.insert("\n", 22);
+			equationDisplay.insert(sol, 22);
+			equationDisplay.insert(" = ", 22);
+			equationDisplay.insert(eq, 22);
+			equationDisplay.insert("\n", 22);
+			equationDisplay.insert("\n", 22);
+			inputEquation.setText("");
+
+			// If the list of equations gets longer than the given screen size clear the
+			// screen of previous equations and start over
+			if (equationDisplay.getLineCount() > 24) {
+				equationDisplay.setText(eq + " = " + sol);
+				equationDisplay.append("\n");
+			}
+		}
+		// If the user pushes the "Graph" button graph the equation if they are on the graphPanel
+		else if (result.equals("Graph")) {
+			if (graphDisplay.isShowing()) {
+				String[] coordinates = calcControl.update("Graph");
+				drawPoints(coordinates);
+			}
+		}
+		// If the user pushes "Clear All" reset all text areas to their original state
+		else if (result.equals("<html>"+"Clear"+"<br>"+"All"+"<html>")) {
+			newText = calcControl.update(result);
+			inputEquation.setText(newText[0]);
+			graphEquation.setText(newText[0]);
+			equationDisplay.setText("Previous equations: ");
+		}
+		// If the user pushes "Clear Graph" reset the graph if it is showing
+		else if (result.equals("<html>"+"Clear"+"<br>"+"Graph"+"<html>")) {
+			if (graphDisplay.isShowing()) {
+				clearGraph();
+				drawGrid();
+			}
+		}
+		// Otherwise add the input to the equation stored in the model
+		else {
+			newText = calcControl.update(result);
+			inputEquation.setText(newText[0]);
+			graphEquation.setText(newText[0]);
+		}
+	}
+
 
 
 
